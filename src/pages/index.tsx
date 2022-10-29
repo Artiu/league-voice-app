@@ -6,22 +6,20 @@ interface UserI {
     micSrcObject?: MediaProvider;
 }
 
-const socket = io("192.168.97.221:3001");
+const socket = io("192.168.0.115:3001");
 
 function User({ id, micSrcObject }: UserI) {
     const audioRef = useRef<HTMLAudioElement>();
-    
+
     useEffect(() => {
-        if(!micSrcObject) return;
+        if (!micSrcObject) return;
         audioRef.current.srcObject = micSrcObject;
-    }, [micSrcObject])
+    }, [micSrcObject]);
 
     return (
         <p>
             {id}
-            {micSrcObject && ( 
-                <audio ref={audioRef} />
-            )}
+            <audio ref={audioRef} controls />
         </p>
     );
 }
@@ -31,66 +29,69 @@ export default function App() {
     const connectionsRef = useRef<Map<string, RTCPeerConnection>>();
     const micRef = useRef<MediaStream>();
 
+    const getMicrophone = async () => {
+        const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micRef.current = mic;
+        return mic;
+    };
+
+    const createPeerConnection = async (userIdToConnect: string) => {
+        const mic = await getMicrophone();
+        const configuration = { iceServers: [{ urls: "stun:openrelay.metered.ca:80" }] };
+        const peerConnection = new RTCPeerConnection(configuration);
+        connectionsRef.current.set(userIdToConnect, peerConnection);
+        mic.getTracks().forEach((track) => {
+            peerConnection.addTrack(track, mic);
+        });
+        let remoteMic: MediaStream;
+        peerConnection.addEventListener("track", (event) => {
+            remoteMic = event.streams[0];
+        });
+        peerConnection.addEventListener("connectionstatechange", () => {
+            if (peerConnection.connectionState === "connected") {
+                setJoinedUsers((users) => [
+                    ...users,
+                    { id: userIdToConnect, micSrcObject: remoteMic },
+                ]);
+            }
+            if (peerConnection.connectionState === "disconnected") {
+                connectionsRef.current.delete(userIdToConnect);
+                setJoinedUsers((users) => users.filter((user) => user.id !== userIdToConnect));
+            }
+        });
+        peerConnection.addEventListener("icecandidate", (event) => {
+            socket.emit("iceCandidate", event.candidate, userIdToConnect);
+        });
+        return peerConnection;
+    };
+
     useEffect(() => {
-            getMicrophone();
-            connectionsRef.current = new Map();
-            const configuration = { iceServers: [{ urls: "stun:openrelay.metered.ca:80" }] };
-            socket.on("userJoined", async (joinedUserId) => {
-                const peerConnection = new RTCPeerConnection(configuration);
-                connectionsRef.current.set(joinedUserId, peerConnection);
-                peerConnection.addEventListener("track", (track) => {                
-                    setJoinedUsers((users) => {
-                        const usersCopy = [...users];
-                        const user = usersCopy.find((user) => user.id === joinedUserId);
-                        user.micSrcObject = new MediaStream(track.streams[0]);
-                        return usersCopy;
-                    })
-                })
-                peerConnection.addTrack(micRef.current.getAudioTracks()[0]);
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-                setJoinedUsers((users) => [...users, { id: joinedUserId}]);
-                socket.emit("offer", offer, joinedUserId);
-            });
-            socket.on("offer", async (offer, from) => {
-                const peerConnection = new RTCPeerConnection(configuration);
-                peerConnection.addEventListener("icecandidate", (event) => {
-                    socket.emit("iceCandidate", event.candidate, from);
-                })
-                connectionsRef.current.set(from, peerConnection);
-                peerConnection.addEventListener("track", (track) => {                    
-                    setJoinedUsers((users) => {
-                        const usersCopy = [...users];
-                        const user = usersCopy.find((user) => user.id === from);
-                        user.micSrcObject = track.streams[0];
-                        return usersCopy;
-                    })
-                })
-                if (connectionsRef.current.get(from)) return;
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-                peerConnection.addTrack(micRef.current.getAudioTracks()[0]);
-                const answer = await peerConnection.createAnswer();
-                await peerConnection.setLocalDescription(answer);
-                setJoinedUsers((users) => [...users, { id: from }]);
-                socket.emit("answer", answer, from);
-            });
-            socket.on("answer", async (answer, from) => {
-                const remoteDesc = new RTCSessionDescription(answer);
-                const peerConnection = connectionsRef.current.get(from);
-                await peerConnection.setRemoteDescription(remoteDesc);                
-            });
-            socket.on("iceCandidate", async (iceCandidate, from) => {
-                await connectionsRef.current.get(from)?.addIceCandidate(iceCandidate);
-            })
+        connectionsRef.current = new Map();
+        socket.on("userJoined", async (joinedUserId) => {
+            const peerConnection = await createPeerConnection(joinedUserId);
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            socket.emit("offer", offer, joinedUserId);
+        });
+        socket.on("offer", async (offer, from) => {
+            const peerConnection = await createPeerConnection(from);
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            socket.emit("answer", answer, from);
+        });
+        socket.on("answer", async (answer, from) => {
+            const remoteDesc = new RTCSessionDescription(answer);
+            const peerConnection = connectionsRef.current.get(from);
+            await peerConnection.setRemoteDescription(remoteDesc);
+        });
+        socket.on("iceCandidate", async (iceCandidate, from) => {
+            await connectionsRef.current.get(from)?.addIceCandidate(iceCandidate);
+        });
         return () => {
             socket.disconnect();
         };
     }, []);
-
-    const getMicrophone = async () => {
-        const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
-        micRef.current = mic;
-    };
 
     return joinedUsers.map((user) => <User key={user.id} {...user} />);
 }
