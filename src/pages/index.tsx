@@ -1,9 +1,9 @@
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 
 interface UserI {
     id: string;
-    micSrcObject?: MediaProvider;
+    micSrcObject?: MediaStream;
 }
 
 const socket = io("192.168.0.115:3001");
@@ -12,9 +12,11 @@ function User({ id, micSrcObject }: UserI) {
     const audioRef = useRef<HTMLAudioElement>();
 
     useEffect(() => {
-        if (!micSrcObject) return;
+        if (!micSrcObject || !audioRef.current) return;
+        console.log(micSrcObject.getTracks());
+
         audioRef.current.srcObject = micSrcObject;
-    }, [micSrcObject]);
+    }, [micSrcObject, audioRef.current]);
 
     return (
         <p>
@@ -28,19 +30,24 @@ export default function App() {
     const [joinedUsers, setJoinedUsers] = useState<UserI[]>([]);
     const connectionsRef = useRef<Map<string, RTCPeerConnection>>();
 
-    const getMicrophone = async (micId: string) => {
-        const mic = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: micId } });
+    const getMicrophone = async (micId?: string) => {
+        const mic = await navigator.mediaDevices.getUserMedia({
+            audio: { deviceId: micId },
+        });
         return mic;
     };
 
     const createPeerConnection = async (userIdToConnect: string) => {
         const configuration = { iceServers: [{ urls: "stun:openrelay.metered.ca:80" }] };
         const peerConnection = new RTCPeerConnection(configuration);
+        const localMic = await getMicrophone(localStorage.getItem("defaultMic"));
+        peerConnection.addTrack(localMic.getAudioTracks()[0], localMic);
         connectionsRef.current.set(userIdToConnect, peerConnection);
         let remoteMic: MediaStream;
+        peerConnection.addEventListener("icecandidate", (event) => {
+            socket.emit("iceCandidate", event.candidate, userIdToConnect);
+        });
         peerConnection.addEventListener("track", (event) => {
-            console.log(event);
-
             remoteMic = event.streams[0];
             setJoinedUsers((users) => {
                 const copy = [...users];
@@ -51,8 +58,6 @@ export default function App() {
             });
         });
         peerConnection.addEventListener("connectionstatechange", () => {
-            console.log(peerConnection.connectionState);
-
             if (peerConnection.connectionState === "connected") {
                 setJoinedUsers((users) => [
                     ...users,
@@ -63,11 +68,6 @@ export default function App() {
                 connectionsRef.current.delete(userIdToConnect);
                 setJoinedUsers((users) => users.filter((user) => user.id !== userIdToConnect));
             }
-        });
-        peerConnection.addEventListener("icecandidate", (event) => {
-            console.log("ice");
-
-            socket.emit("iceCandidate", event.candidate, userIdToConnect);
         });
         return peerConnection;
     };
@@ -93,7 +93,14 @@ export default function App() {
             await peerConnection.setRemoteDescription(remoteDesc);
         });
         socket.on("iceCandidate", async (iceCandidate, from) => {
-            await connectionsRef.current.get(from)?.addIceCandidate(iceCandidate);
+            if (!iceCandidate) return;
+            await connectionsRef.current.get(from)?.addIceCandidate(
+                new RTCIceCandidate({
+                    candidate: iceCandidate.candidate,
+                    sdpMid: "",
+                    sdpMLineIndex: 0,
+                })
+            );
         });
         return () => {
             socket.disconnect();
@@ -117,11 +124,11 @@ export default function App() {
 
     const changeMic = async (newMicId: string) => {
         setActiveMicId(newMicId);
+        localStorage.setItem("defaultMic", newMicId);
         const newMic = await getMicrophone(newMicId);
         connectionsRef.current.forEach((conn) => {
             conn.addTrack(newMic.getAudioTracks()[0], newMic);
         });
-        localStorage.setItem("defaultMic", newMicId);
     };
 
     useEffect(() => {
