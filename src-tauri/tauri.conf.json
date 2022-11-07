@@ -12,7 +12,10 @@
   },
   "tauri": {
     "allowlist": {
-      "all": true
+      "shell": {
+        "execute": true,
+        "scope": [{ "name": "get-league-process", "cmd": "cmd", "args": ["/C", "WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline"]}]
+      }
     },
     "bundle": {
       "active": true,

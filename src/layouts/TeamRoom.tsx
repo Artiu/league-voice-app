@@ -1,7 +1,7 @@
 import JoinedUser from "components/JoinedUser";
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
-import { UserI } from "types/User";
+import { UserI } from "types/user";
 
 const socket = io("192.168.0.115:3001");
 
