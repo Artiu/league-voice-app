@@ -45,12 +45,12 @@ export default function useLeagueClient() {
 
     const getSummonerId = async () => {
         const summoner = await getRequest("/lol-summoner/v1/current-summoner");
-        return JSON.parse(summoner).summonerId as string;
+        return JSON.parse(summoner)?.summonerId as string;
     };
 
     const getGameflowPhase = async () => {
         const status: string = await getRequest("/lol-gameflow/v1/gameflow-phase");
-        return status.replaceAll('"', "");
+        return status?.replaceAll('"', "");
     };
 
     const getChampSelect = async () => {
@@ -60,7 +60,7 @@ export default function useLeagueClient() {
 
     const getPlayerFromChampSelect = async (summonerId: string): Promise<Player | undefined> => {
         const champSelect = await getChampSelect();
-        return champSelect.myTeam.find((player: Player) => player.summonerId === summonerId);
+        return champSelect?.myTeam.find((player: Player) => player.summonerId === summonerId);
     };
 
     useEffect(() => {
@@ -73,13 +73,14 @@ export default function useLeagueClient() {
 
     useEffect(() => {
         if (!isOpen) return;
-        getSummonerId().then((val) => setSummonerId(val));
         const interval = setInterval(async () => {
             const gameflow = await getGameflowPhase();
             if (!INGAME_STATES.includes(gameflow)) {
                 setChatId(null);
                 return;
             }
+            const summonerId = await getSummonerId();
+            setSummonerId(summonerId);
             const champSelect = await getChampSelect();
             setChatId(champSelect.chatDetails.chatRoomName);
         }, 1000);
