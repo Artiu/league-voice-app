@@ -1,0 +1,6 @@
+-fix mic change
+-improve GUI
+-add minimizing app instead of closing instead
+-splashscreen?
+-icons
+-updater

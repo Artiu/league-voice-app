@@ -1,6 +1,7 @@
 import { Command } from "@tauri-apps/api/shell";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useEffect, useRef, useState } from "react";
+import { Position } from "types/user";
 
 interface ClientInfo {
     port: number;
@@ -10,14 +11,15 @@ interface ClientInfo {
 interface Player {
     summonerId: string;
     championId: number;
+    assignedPosition: Position;
 }
 
 const INGAME_STATES = ["ChampSelect", "InProgress"];
 
 export default function useLeagueClient() {
     const [isOpen, setIsOpen] = useState(false);
-    const [isInMatch, setIsInMatch] = useState(false);
-    const playersFromTeam = useRef<Player[]>([]);
+    const [summonerId, setSummonerId] = useState<string | null>(null);
+    const [chatId, setChatId] = useState<string | null>(null);
     const clientInfo = useRef<ClientInfo>();
 
     const checkProcess = async () => {
@@ -56,11 +58,9 @@ export default function useLeagueClient() {
         return JSON.parse(data);
     };
 
-    const getPlayerFromChampSelect = async (summonerId: string) => {
+    const getPlayerFromChampSelect = async (summonerId: string): Promise<Player | undefined> => {
         const champSelect = await getChampSelect();
-        return champSelect.myTeam.find(
-            (player: { summonerId: string }) => player.summonerId === summonerId
-        );
+        return champSelect.myTeam.find((player: Player) => player.summonerId === summonerId);
     };
 
     useEffect(() => {
@@ -73,13 +73,15 @@ export default function useLeagueClient() {
 
     useEffect(() => {
         if (!isOpen) return;
+        getSummonerId().then((val) => setSummonerId(val));
         const interval = setInterval(async () => {
             const gameflow = await getGameflowPhase();
             if (!INGAME_STATES.includes(gameflow)) {
-                setIsInMatch(false);
+                setChatId(null);
                 return;
             }
-            setIsInMatch(true);
+            const champSelect = await getChampSelect();
+            setChatId(champSelect.chatDetails.chatRoomName);
         }, 1000);
         return () => {
             clearInterval(interval);
@@ -88,6 +90,9 @@ export default function useLeagueClient() {
 
     return {
         isOpen,
-        isInMatch,
+        isInMatch: !!chatId,
+        chatId,
+        summonerId,
+        getPlayerFromChampSelect,
     };
 }
