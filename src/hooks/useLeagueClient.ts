@@ -1,17 +1,11 @@
 import { Command } from "@tauri-apps/api/shell";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useEffect, useRef, useState } from "react";
-import { Position } from "types/user";
+import { Player, Position } from "types/user";
 
 interface ClientInfo {
     port: number;
     password: string;
-}
-
-interface Player {
-    summonerId: string;
-    championId: number;
-    assignedPosition: Position;
 }
 
 const INGAME_STATES = ["ChampSelect", "InProgress"];

@@ -1,15 +1,32 @@
 import JoinedUser from "components/JoinedUser";
-import useLeagueClient from "hooks/useLeagueClient";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
-import { UserI } from "types/user";
+import { Player, UserI } from "types/user";
+
+interface TeamRoomProps {
+    players: Player[];
+    chatId: string;
+    summonerId: string;
+}
 
 const socket = io("192.168.0.115:3001", { autoConnect: false });
 
-export default function TeamRoom() {
-    const { chatId, summonerId, getPlayerFromChampSelect } = useLeagueClient();
+export default function TeamRoom({ players, chatId, summonerId }: TeamRoomProps) {
     const [joinedUsers, setJoinedUsers] = useState<UserI[]>([]);
     const connectionsRef = useRef<Map<string, RTCPeerConnection>>();
+
+    const connectedPlayers = useMemo(
+        () =>
+            joinedUsers.map((user) => ({
+                ...user,
+                ...players.find((player) => player.summonerId === user.summonerId),
+            })),
+        [players, joinedUsers]
+    );
+
+    const getPlayerFromChampSelect = (summmonerId: string) => {
+        return players.find((player) => player.summonerId === summmonerId);
+    };
 
     const getMicrophone = async (micId?: string) => {
         const mic = await navigator.mediaDevices.getUserMedia({
@@ -40,13 +57,11 @@ export default function TeamRoom() {
         });
         peerConnection.addEventListener("connectionstatechange", async () => {
             if (peerConnection.connectionState === "connected") {
-                const player = await getPlayerFromChampSelect(summonerId);
                 setJoinedUsers((users) => [
                     ...users,
                     {
                         id,
-                        lane: player.assignedPosition,
-                        championId: player.championId,
+                        summonerId,
                         micSrcObject: remoteMic,
                     },
                 ]);
@@ -64,7 +79,7 @@ export default function TeamRoom() {
         socket.auth = { token: summonerId };
         connectionsRef.current = new Map();
         socket.on("userJoined", async ({ id, token }) => {
-            const player = await getPlayerFromChampSelect(token);
+            const player = getPlayerFromChampSelect(token);
             if (!player) return;
             const peerConnection = await createPeerConnection(id, token);
             const offer = await peerConnection.createOffer();
@@ -72,7 +87,7 @@ export default function TeamRoom() {
             socket.emit("offer", offer, id);
         });
         socket.on("offer", async (offer, { id, token }) => {
-            const player = await getPlayerFromChampSelect(token);
+            const player = getPlayerFromChampSelect(token);
             if (!player) return;
             const peerConnection = await createPeerConnection(id, token);
             await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
@@ -140,7 +155,7 @@ export default function TeamRoom() {
                     </option>
                 ))}
             </select>
-            {joinedUsers.map((user) => (
+            {connectedPlayers.map((user) => (
                 <JoinedUser key={user.id} {...user} />
             ))}
         </>

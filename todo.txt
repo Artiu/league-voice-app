@@ -1,6 +1,9 @@
+-images for lanes and champions
+-showing yourself
 -fix mic change
 -improve GUI
 -add minimizing app instead of closing instead
 -splashscreen?
 -icons
 -updater
+-refactor

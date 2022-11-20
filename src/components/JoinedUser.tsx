@@ -1,19 +1,22 @@
 import { useEffect, useRef } from "react";
-import { UserI } from "types/User";
+import { Player, UserI } from "types/user";
 
-export default function JoinedUser({ id, micSrcObject }: UserI) {
+export default function JoinedUser({
+    id,
+    assignedPosition,
+    championId,
+    micSrcObject,
+}: UserI & Player) {
     const audioRef = useRef<HTMLAudioElement>();
 
     useEffect(() => {
         if (!micSrcObject || !audioRef.current) return;
-        console.log(micSrcObject.getTracks());
-
         audioRef.current.srcObject = micSrcObject;
     }, [micSrcObject, audioRef.current]);
 
     return (
         <p>
-            {id}
+            {id}: {assignedPosition} : {championId}
             <audio ref={audioRef} controls autoPlay />
         </p>
     );
