@@ -9,7 +9,9 @@ interface TeamRoomProps {
     summonerId: string;
 }
 
-const socket = io("192.168.0.115:3001", { autoConnect: false });
+const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL, {
+    autoConnect: false,
+});
 
 export default function TeamRoom({ players, chatId, summonerId }: TeamRoomProps) {
     const [joinedUsers, setJoinedUsers] = useState<UserI[]>([]);
@@ -137,9 +139,9 @@ export default function TeamRoom({ players, chatId, summonerId }: TeamRoomProps)
         setActiveMicId(newMicId);
         localStorage.setItem("defaultMic", newMicId);
         const newMic = await getMicrophone(newMicId);
-        connectionsRef.current.forEach((conn) => {
-            conn.addTrack(newMic.getAudioTracks()[0], newMic);
-        });
+        // connectionsRef.current.forEach((conn) => {
+        //     conn.addTrack(newMic.getAudioTracks()[0], newMic);
+        // });
     };
 
     useEffect(() => {

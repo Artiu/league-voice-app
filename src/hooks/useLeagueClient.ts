@@ -14,6 +14,7 @@ export default function useLeagueClient() {
     const [isOpen, setIsOpen] = useState(false);
     const [summonerId, setSummonerId] = useState<string | null>(null);
     const [chatId, setChatId] = useState<string | null>(null);
+    const [players, setPlayers] = useState<Player[]>([]);
     const clientInfo = useRef<ClientInfo>();
 
     const checkProcess = async () => {
@@ -77,6 +78,7 @@ export default function useLeagueClient() {
             setSummonerId(summonerId);
             const champSelect = await getChampSelect();
             setChatId(champSelect.chatDetails.chatRoomName);
+            setPlayers(champSelect.myTeam);
         }, 1000);
         return () => {
             clearInterval(interval);
@@ -88,6 +90,6 @@ export default function useLeagueClient() {
         isInMatch: !!chatId,
         chatId,
         summonerId,
-        getPlayerFromChampSelect,
+        players,
     };
 }

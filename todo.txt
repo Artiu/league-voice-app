@@ -1,4 +1,5 @@
 -images for lanes and champions
+-add leave call button
 -showing yourself
 -fix mic change
 -improve GUI

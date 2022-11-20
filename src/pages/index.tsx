@@ -4,7 +4,7 @@ import WaitingForLoLClient from "layouts/WaitingForLoLClient";
 import WaitingForMatch from "layouts/WaitingForMatch";
 
 export default function App() {
-    const { isOpen, isInMatch } = useLeagueClient();
+    const { players, chatId, summonerId, isOpen, isInMatch } = useLeagueClient();
 
     if (!isOpen) {
         return <WaitingForLoLClient />;
@@ -14,5 +14,5 @@ export default function App() {
         return <WaitingForMatch />;
     }
 
-    return <TeamRoom />;
+    return <TeamRoom players={players} chatId={chatId} summonerId={summonerId} />;
 }
