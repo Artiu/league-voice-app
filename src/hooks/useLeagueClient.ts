@@ -45,17 +45,14 @@ export default function useLeagueClient() {
 
     const getGameflowPhase = async () => {
         const status: string = await getRequest("/lol-gameflow/v1/gameflow-phase");
+        console.log(status);
+
         return status?.replaceAll('"', "");
     };
 
     const getChampSelect = async () => {
         const data = await getRequest("/lol-champ-select/v1/session");
         return JSON.parse(data);
-    };
-
-    const getPlayerFromChampSelect = async (summonerId: string): Promise<Player | undefined> => {
-        const champSelect = await getChampSelect();
-        return champSelect?.myTeam.find((player: Player) => player.summonerId === summonerId);
     };
 
     useEffect(() => {
@@ -70,6 +67,8 @@ export default function useLeagueClient() {
         if (!isOpen) return;
         const interval = setInterval(async () => {
             const gameflow = await getGameflowPhase();
+            console.log(await getRequest("/lol-rso-auth/v1/authorization/access-token"));
+
             if (!INGAME_STATES.includes(gameflow)) {
                 setChatId(null);
                 return;

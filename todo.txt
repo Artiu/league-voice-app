@@ -1,3 +1,7 @@
+-voice isnt working or connects to wrong room
+-authorization on summoner name till RSO
+
+
 -images for lanes and champions
 -add leave call button
 -showing yourself
@@ -8,3 +12,4 @@
 -icons
 -updater
 -refactor
+-ads, support creator
