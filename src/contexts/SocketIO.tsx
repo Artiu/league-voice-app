@@ -4,6 +4,7 @@ import { useAuthContext } from "./Auth";
 
 const socketIO = io(process.env.NEXT_PUBLIC_BACKEND_URL, {
     autoConnect: false,
+    withCredentials: true,
 });
 
 const SocketIOContext = createContext(socketIO);
