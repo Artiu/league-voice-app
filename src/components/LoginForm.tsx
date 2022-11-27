@@ -1,9 +1,9 @@
-import useAuth from "hooks/useAuth";
+import { useAuthContext } from "contexts/Auth";
 import { FormEvent, useState } from "react";
 
 export default function LoginForm() {
     const [summonerName, setSummonerName] = useState("");
-    const { updateSummonerName } = useAuth();
+    const { updateSummonerName } = useAuthContext();
 
     const submitForm = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -19,6 +19,7 @@ export default function LoginForm() {
                 onChange={(e) => setSummonerName(e.target.value)}
                 value={summonerName}
             />
+            EUNE
             <button type="submit">Log in</button>
         </form>
     );

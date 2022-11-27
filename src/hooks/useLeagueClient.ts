@@ -1,20 +1,17 @@
 import { Command } from "@tauri-apps/api/shell";
 import { invoke } from "@tauri-apps/api/tauri";
+import { useAppInfoContext } from "contexts/AppInfo";
 import { useEffect, useRef, useState } from "react";
-import { Player, Position } from "types/user";
 
 interface ClientInfo {
     port: number;
     password: string;
 }
 
-const INGAME_STATES = ["ChampSelect", "InProgress"];
-
 export default function useLeagueClient() {
+    const { isTauri } = useAppInfoContext();
     const [isOpen, setIsOpen] = useState(false);
-    const [summonerId, setSummonerId] = useState<string | null>(null);
-    const [chatId, setChatId] = useState<string | null>(null);
-    const [players, setPlayers] = useState<Player[]>([]);
+    const [isInMatch, setIsInMatch] = useState(false);
     const clientInfo = useRef<ClientInfo>();
 
     const checkProcess = async () => {
@@ -38,57 +35,28 @@ export default function useLeagueClient() {
         return result;
     };
 
-    const getSummonerId = async () => {
-        const summoner = await getRequest("/lol-summoner/v1/current-summoner");
-        return JSON.parse(summoner)?.summonerId as string;
-    };
-
     const getGameflowPhase = async () => {
         const status: string = await getRequest("/lol-gameflow/v1/gameflow-phase");
-        console.log(status);
-
         return status?.replaceAll('"', "");
     };
 
-    const getChampSelect = async () => {
-        const data = await getRequest("/lol-champ-select/v1/session");
-        return JSON.parse(data);
-    };
-
     useEffect(() => {
-        checkProcess();
-        const interval = setInterval(checkProcess, 3000);
-        return () => {
-            clearInterval(interval);
-        };
-    }, []);
-
-    useEffect(() => {
-        if (!isOpen) return;
-        const interval = setInterval(async () => {
-            const gameflow = await getGameflowPhase();
-            console.log(await getRequest("/lol-rso-auth/v1/authorization/access-token"));
-
-            if (!INGAME_STATES.includes(gameflow)) {
-                setChatId(null);
-                return;
-            }
-            const summonerId = await getSummonerId();
-            setSummonerId(summonerId);
-            const champSelect = await getChampSelect();
-            setChatId(champSelect.chatDetails.chatRoomName);
-            setPlayers(champSelect.myTeam);
-        }, 1000);
+        if (!isTauri) return;
+        let interval: NodeJS.Timer;
+        if (!isOpen) {
+            interval = setInterval(checkProcess, 3000);
+        } else {
+            interval = setInterval(async () => {
+                const gameflow = await getGameflowPhase();
+                setIsInMatch(gameflow === "InProgress");
+            }, 1000);
+        }
         return () => {
             clearInterval(interval);
         };
     }, [isOpen]);
 
     return {
-        isOpen,
-        isInMatch: !!chatId,
-        chatId,
-        summonerId,
-        players,
+        isInMatch,
     };
 }

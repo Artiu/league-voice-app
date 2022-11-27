@@ -1,34 +1,14 @@
 import JoinedUser from "components/JoinedUser";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { io } from "socket.io-client";
-import { Player, UserI } from "types/user";
+import { useGameStateContext } from "contexts/GameState";
+import { useSocketIOContext } from "contexts/SocketIO";
+import { useEffect, useRef, useState } from "react";
+import { Teammate, User } from "types/user";
 
-interface TeamRoomProps {
-    players: Player[];
-    chatId: string;
-    summonerId: string;
-}
-
-const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL, {
-    autoConnect: false,
-});
-
-export default function TeamRoom({ players, chatId, summonerId }: TeamRoomProps) {
-    const [joinedUsers, setJoinedUsers] = useState<UserI[]>([]);
+export default function TeamRoom() {
+    const socket = useSocketIOContext();
+    const { teammates } = useGameStateContext();
+    const [joinedUsers, setJoinedUsers] = useState<(User & Teammate)[]>([]);
     const connectionsRef = useRef<Map<string, RTCPeerConnection>>();
-
-    const connectedPlayers = useMemo(
-        () =>
-            joinedUsers.map((user) => ({
-                ...user,
-                ...players.find((player) => player.summonerId === user.summonerId),
-            })),
-        [players, joinedUsers]
-    );
-
-    const getPlayerFromChampSelect = (summmonerId: string) => {
-        return players.find((player) => player.summonerId === summmonerId);
-    };
 
     const getMicrophone = async (micId?: string) => {
         const mic = await navigator.mediaDevices.getUserMedia({
@@ -37,7 +17,7 @@ export default function TeamRoom({ players, chatId, summonerId }: TeamRoomProps)
         return mic;
     };
 
-    const createPeerConnection = async (id: string, summonerId: string) => {
+    const createPeerConnection = async (id: string, summonerName: string) => {
         const configuration = { iceServers: [{ urls: "stun:openrelay.metered.ca:80" }] };
         const peerConnection = new RTCPeerConnection(configuration);
         const localMic = await getMicrophone(localStorage.getItem("defaultMic"));
@@ -51,7 +31,7 @@ export default function TeamRoom({ players, chatId, summonerId }: TeamRoomProps)
             remoteMic = event.streams[0];
             setJoinedUsers((users) => {
                 const copy = [...users];
-                const user = copy.find((user) => user.id === id);
+                const user = copy.find((user) => user.summonerName === summonerName);
                 if (!user) return copy;
                 user.micSrcObject = remoteMic;
                 return copy;
@@ -62,47 +42,51 @@ export default function TeamRoom({ players, chatId, summonerId }: TeamRoomProps)
                 setJoinedUsers((users) => [
                     ...users,
                     {
-                        id,
-                        summonerId,
+                        socketId: id,
+                        summonerName,
                         micSrcObject: remoteMic,
+                        ...teammates.find((teammate) => teammate.summonerName === summonerName),
                     },
                 ]);
             }
             if (peerConnection.connectionState === "disconnected") {
                 connectionsRef.current.delete(id);
-                setJoinedUsers((users) => users.filter((user) => user.id !== id));
+                setJoinedUsers((users) =>
+                    users.filter((user) => user.summonerName !== summonerName)
+                );
             }
         });
         return peerConnection;
     };
 
     useEffect(() => {
-        if (!chatId) return;
-        socket.auth = { token: summonerId };
         connectionsRef.current = new Map();
-        socket.on("userJoined", async ({ id, token }) => {
-            const player = getPlayerFromChampSelect(token);
-            if (!player) return;
+
+        const onUserJoined = async ({ id, token }) => {
             const peerConnection = await createPeerConnection(id, token);
             const offer = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offer);
             socket.emit("offer", offer, id);
-        });
-        socket.on("offer", async (offer, { id, token }) => {
-            const player = getPlayerFromChampSelect(token);
-            if (!player) return;
+        };
+        socket.on("userJoined", onUserJoined);
+
+        const onOffer = async (offer: RTCSessionDescriptionInit, { id, token }: any) => {
             const peerConnection = await createPeerConnection(id, token);
             await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
             socket.emit("answer", answer, id);
-        });
-        socket.on("answer", async (answer, from) => {
+        };
+        socket.on("offer", onOffer);
+
+        const onAnswer = async (answer: RTCSessionDescriptionInit, from: string) => {
             const remoteDesc = new RTCSessionDescription(answer);
             const peerConnection = connectionsRef.current.get(from);
             await peerConnection.setRemoteDescription(remoteDesc);
-        });
-        socket.on("iceCandidate", async (iceCandidate, from) => {
+        };
+        socket.on("answer", onAnswer);
+
+        const onIceCandidate = async (iceCandidate: { candidate: string }, from: string) => {
             if (!iceCandidate) return;
             await connectionsRef.current.get(from)?.addIceCandidate(
                 new RTCIceCandidate({
@@ -111,13 +95,16 @@ export default function TeamRoom({ players, chatId, summonerId }: TeamRoomProps)
                     sdpMLineIndex: 0,
                 })
             );
-        });
-        socket.connect();
-        socket.emit("matchStart", chatId);
-        return () => {
-            socket.disconnect();
         };
-    }, [chatId]);
+        socket.on("iceCandidate", onIceCandidate);
+
+        return () => {
+            socket.off("userJoined", onUserJoined);
+            socket.off("offer", onOffer);
+            socket.off("answer", onAnswer);
+            socket.off("iceCandidate", onIceCandidate);
+        };
+    }, []);
 
     const [activeMicId, setActiveMicId] = useState<string>();
     const [microphones, setMicrophones] = useState<MediaDeviceInfo[]>([]);
@@ -144,6 +131,8 @@ export default function TeamRoom({ players, chatId, summonerId }: TeamRoomProps)
         // });
     };
 
+    console.log(joinedUsers);
+
     useEffect(() => {
         getMicrophones();
     }, []);
@@ -157,8 +146,8 @@ export default function TeamRoom({ players, chatId, summonerId }: TeamRoomProps)
                     </option>
                 ))}
             </select>
-            {connectedPlayers.map((user) => (
-                <JoinedUser key={user.id} {...user} />
+            {joinedUsers.map((user) => (
+                <JoinedUser key={user.socketId} {...user} />
             ))}
         </>
     );

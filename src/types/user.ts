@@ -1,13 +1,10 @@
-export interface UserI {
-    id: string;
-    summonerId: string;
+export interface User {
+    socketId: string;
+    summonerName: string;
     micSrcObject?: MediaStream;
 }
 
-export interface Player {
-    summonerId: string;
+export interface Teammate {
     championId: number;
-    assignedPosition: Position;
+    summonerName: string;
 }
-
-export type Position = "TOP" | "JUNGLE" | "MIDDLE" | "BOTTOM" | "SUPPORT";

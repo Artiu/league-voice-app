@@ -1,8 +1,8 @@
--voice isnt working or connects to wrong room
--authorization on summoner name till RSO
+-voice isnt working or connects to wrong room(test on prod) / randomly disconnects users when one refreshes page
+-mic isnt changing
 
-
--images for lanes and champions
+-images for champions
+-logout button
 -add leave call button
 -showing yourself
 -fix mic change
