@@ -1,4 +1,5 @@
--voice isnt working or connects to wrong room(test on prod) / randomly disconnects users when one refreshes page
+-voice isnt working or connects to wrong room(test on prod)
+-summunerData is empty?
 -mic isnt changing
 
 -images for champions

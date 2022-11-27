@@ -51,9 +51,7 @@ export default function TeamRoom() {
             }
             if (peerConnection.connectionState === "disconnected") {
                 connectionsRef.current.delete(id);
-                setJoinedUsers((users) =>
-                    users.filter((user) => user.summonerName !== summonerName)
-                );
+                setJoinedUsers((users) => users.filter((user) => user.socketId !== id));
             }
         });
         return peerConnection;
