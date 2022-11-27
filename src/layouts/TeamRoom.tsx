@@ -60,16 +60,16 @@ export default function TeamRoom() {
     useEffect(() => {
         connectionsRef.current = new Map();
 
-        const onUserJoined = async ({ id, token }) => {
-            const peerConnection = await createPeerConnection(id, token);
+        const onUserJoined = async ({ id, summonerName }) => {
+            const peerConnection = await createPeerConnection(id, summonerName);
             const offer = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offer);
             socket.emit("offer", offer, id);
         };
         socket.on("userJoined", onUserJoined);
 
-        const onOffer = async (offer: RTCSessionDescriptionInit, { id, token }: any) => {
-            const peerConnection = await createPeerConnection(id, token);
+        const onOffer = async (offer: RTCSessionDescriptionInit, { id, summonerName }: any) => {
+            const peerConnection = await createPeerConnection(id, summonerName);
             await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
@@ -128,8 +128,6 @@ export default function TeamRoom() {
         //     conn.addTrack(newMic.getAudioTracks()[0], newMic);
         // });
     };
-
-    console.log(joinedUsers);
 
     useEffect(() => {
         getMicrophones();
