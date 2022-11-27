@@ -1,4 +1,3 @@
--voice isnt working or connects to wrong room(test on prod)
 -mic isnt changing
 
 -images for champions
