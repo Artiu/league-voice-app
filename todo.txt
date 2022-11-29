@@ -1,10 +1,10 @@
--mic isnt changing
+-mic isnt changing / voice isnt working
 
 -images for champions
 -logout button
 -add leave call button
+-add ChakraUI Card? for connected users, highlighting when using voice, p2p connection state("Connecting", "Connected", "Disconnected")
 -showing yourself
--fix mic change
 -improve GUI
 -add minimizing app instead of closing instead
 -splashscreen?
