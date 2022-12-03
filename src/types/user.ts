@@ -1,6 +1,7 @@
 export interface User {
     socketId: string;
     summonerName: string;
+    connectionState: RTCPeerConnectionState;
     micSrcObject?: MediaStream;
 }
 

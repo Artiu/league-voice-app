@@ -1,4 +1,4 @@
--mic isnt changing / voice isnt working
+-select in start of app doesnt work properly
 
 -images for champions
 -logout button

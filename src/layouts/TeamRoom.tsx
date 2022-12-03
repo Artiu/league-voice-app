@@ -5,137 +5,185 @@ import { useEffect, useRef, useState } from "react";
 import { Teammate, User } from "types/user";
 
 export default function TeamRoom() {
+    const [activeMicId, setActiveMicId] = useState<string | undefined>();
+    const [microphones, setMicrophones] = useState<MediaDeviceInfo[]>([]);
+    const activeMicRef = useRef<MediaStream>(new MediaStream());
+
+    const updateMic = (micId: string) => {
+        setActiveMicId(micId);
+        localStorage.setItem("defaultMic", micId);
+    };
+
+    const getMicrophones = async () => {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const microphones = devices.filter((device) => device.kind === "audioinput");
+        if (!activeMicId) {
+            updateMic(microphones[0].deviceId);
+        }
+        return microphones;
+    };
+
+    const updateMicrophones = async () => {
+        const microphones = await getMicrophones();
+        setMicrophones(microphones);
+    };
+
+    useEffect(() => {
+        (async () => {
+            const mic = await navigator.mediaDevices.getUserMedia({
+                audio: { deviceId: activeMicId },
+            });
+            activeMicRef.current = mic;
+            connectionsRef.current.forEach((conn) => {
+                conn.getSenders().forEach((sender) => {
+                    conn.removeTrack(sender);
+                });
+                conn.addTrack(mic.getAudioTracks()[0], mic);
+            });
+        })();
+    }, [activeMicId]);
+
+    useEffect(() => {
+        navigator.mediaDevices.addEventListener("devicechange", updateMicrophones);
+        updateMicrophones();
+        return () => {
+            navigator.mediaDevices.removeEventListener("devicechange", getMicrophones);
+        };
+    }, []);
+
     const socket = useSocketIOContext();
     const { teammates } = useGameStateContext();
     const [joinedUsers, setJoinedUsers] = useState<(User & Teammate)[]>([]);
-    const connectionsRef = useRef<Map<string, RTCPeerConnection>>();
+    const connectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
 
-    const getMicrophone = async (micId?: string) => {
-        const mic = await navigator.mediaDevices.getUserMedia({
-            audio: { deviceId: micId },
-        });
-        return mic;
-    };
-
-    const createPeerConnection = async (id: string, summonerName: string) => {
+    const createPeerConnection = async (socketId: string, summonerName: string) => {
         const configuration = { iceServers: [{ urls: "stun:openrelay.metered.ca:80" }] };
         const peerConnection = new RTCPeerConnection(configuration);
-        const localMic = await getMicrophone(localStorage.getItem("defaultMic"));
-        peerConnection.addTrack(localMic.getAudioTracks()[0], localMic);
-        connectionsRef.current.set(id, peerConnection);
-        let remoteMic: MediaStream;
-        peerConnection.addEventListener("icecandidate", (event) => {
-            socket.emit("iceCandidate", event.candidate, id);
+        activeMicRef.current.getAudioTracks().forEach((track) => {
+            peerConnection.addTrack(track, activeMicRef.current);
         });
-        peerConnection.addEventListener("track", (event) => {
-            remoteMic = event.streams[0];
+        connectionsRef.current.set(socketId, peerConnection);
+        setJoinedUsers((users) => [
+            ...users,
+            {
+                socketId,
+                summonerName,
+                connectionState: peerConnection.connectionState,
+                ...teammates.find((teammate) => teammate.summonerName === summonerName),
+            },
+        ]);
+        peerConnection.ontrack = ({ track, streams }) => {
+            track.onunmute = () => {
+                setJoinedUsers((users) => {
+                    const copy = [...users];
+                    copy.map((user) => {
+                        if (user.socketId === socketId) {
+                            user.micSrcObject = streams[0];
+                        }
+                    });
+                    return copy;
+                });
+            };
+        };
+        peerConnection.onnegotiationneeded = async () => {
+            try {
+                await peerConnection.setLocalDescription();
+                socket.emit(
+                    "signaling",
+                    { description: peerConnection.localDescription },
+                    socketId
+                );
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        peerConnection.oniceconnectionstatechange = () => {
+            if (peerConnection.iceConnectionState === "failed") {
+                peerConnection.restartIce();
+            }
+        };
+
+        peerConnection.onicecandidate = ({ candidate }) => {
+            socket.emit("signaling", { candidate }, socketId);
+        };
+
+        peerConnection.addEventListener("connectionstatechange", async () => {
             setJoinedUsers((users) => {
                 const copy = [...users];
-                const user = copy.find((user) => user.summonerName === summonerName);
-                if (!user) return copy;
-                user.micSrcObject = remoteMic;
+                copy.map((user) => {
+                    if (user.socketId === socketId) {
+                        user.connectionState = peerConnection.connectionState;
+                    }
+                });
                 return copy;
             });
-        });
-        peerConnection.addEventListener("connectionstatechange", async () => {
-            if (peerConnection.connectionState === "connected") {
-                setJoinedUsers((users) => [
-                    ...users,
-                    {
-                        socketId: id,
-                        summonerName,
-                        micSrcObject: remoteMic,
-                        ...teammates.find((teammate) => teammate.summonerName === summonerName),
-                    },
-                ]);
-            }
-            if (peerConnection.connectionState === "disconnected") {
-                connectionsRef.current.delete(id);
-                setJoinedUsers((users) => users.filter((user) => user.socketId !== id));
+            if (
+                peerConnection.connectionState === "failed" ||
+                peerConnection.connectionState === "closed"
+            ) {
+                connectionsRef.current.delete(socketId);
+                setJoinedUsers((users) => users.filter((user) => user.socketId !== socketId));
             }
         });
         return peerConnection;
     };
 
-    useEffect(() => {
-        connectionsRef.current = new Map();
+    const connectToPeer = async (
+        description: RTCSessionDescriptionInit,
+        candidate: RTCIceCandidateInit,
+        authData: { id: string; summonerName: string }
+    ) => {
+        let peerConnection = connectionsRef.current.get(authData.id);
+        if (!peerConnection) {
+            peerConnection = await createPeerConnection(authData.id, authData.summonerName);
+        }
+        try {
+            if (description) {
+                await peerConnection.setRemoteDescription(description);
+                if (description.type === "offer") {
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    socket.emit(
+                        "signaling",
+                        { description: peerConnection.localDescription },
+                        authData.id
+                    );
+                }
+            } else if (candidate) {
+                try {
+                    await peerConnection.addIceCandidate(candidate);
+                } catch (err) {
+                    throw err;
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
+    useEffect(() => {
         const onUserJoined = async ({ id, summonerName }) => {
-            const peerConnection = await createPeerConnection(id, summonerName);
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-            socket.emit("offer", offer, id);
+            await createPeerConnection(id, summonerName);
         };
         socket.on("userJoined", onUserJoined);
 
-        const onOffer = async (offer: RTCSessionDescriptionInit, { id, summonerName }: any) => {
-            const peerConnection = await createPeerConnection(id, summonerName);
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-            const answer = await peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answer);
-            socket.emit("answer", answer, id);
+        const onSignaling = async (
+            { description, candidate },
+            authData: { id: string; summonerName: string }
+        ) => {
+            await connectToPeer(description, candidate, authData);
         };
-        socket.on("offer", onOffer);
-
-        const onAnswer = async (answer: RTCSessionDescriptionInit, from: string) => {
-            const remoteDesc = new RTCSessionDescription(answer);
-            const peerConnection = connectionsRef.current.get(from);
-            await peerConnection.setRemoteDescription(remoteDesc);
-        };
-        socket.on("answer", onAnswer);
-
-        const onIceCandidate = async (iceCandidate: { candidate: string }, from: string) => {
-            if (!iceCandidate) return;
-            await connectionsRef.current.get(from)?.addIceCandidate(
-                new RTCIceCandidate({
-                    candidate: iceCandidate.candidate,
-                    sdpMid: "",
-                    sdpMLineIndex: 0,
-                })
-            );
-        };
-        socket.on("iceCandidate", onIceCandidate);
+        socket.on("signaling", onSignaling);
 
         return () => {
             socket.off("userJoined", onUserJoined);
-            socket.off("offer", onOffer);
-            socket.off("answer", onAnswer);
-            socket.off("iceCandidate", onIceCandidate);
+            socket.off("signaling", onSignaling);
         };
-    }, []);
-
-    const [activeMicId, setActiveMicId] = useState<string>();
-    const [microphones, setMicrophones] = useState<MediaDeviceInfo[]>([]);
-
-    const getMicrophones = async () => {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const microphones = devices.filter((device) => device.kind === "audioinput");
-        setMicrophones(microphones);
-        const defaultMic = localStorage.getItem("defaultMic");
-        if (defaultMic) {
-            changeMic(defaultMic);
-            return;
-        }
-        changeMic(microphones[0].deviceId);
-    };
-
-    //doesnt work on connected peers
-    const changeMic = async (newMicId: string) => {
-        setActiveMicId(newMicId);
-        localStorage.setItem("defaultMic", newMicId);
-        const newMic = await getMicrophone(newMicId);
-        // connectionsRef.current.forEach((conn) => {
-        //     conn.addTrack(newMic.getAudioTracks()[0], newMic);
-        // });
-    };
-
-    useEffect(() => {
-        getMicrophones();
     }, []);
 
     return (
         <>
-            <select value={activeMicId} onChange={(e) => changeMic(e.target.value)}>
+            <select value={activeMicId} onChange={(e) => updateMic(e.target.value)}>
                 {microphones.map((mic) => (
                     <option key={mic.deviceId} value={mic.deviceId}>
                         {mic.label}
