@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { Teammate, User } from "types/user";
 
 export default function TeamRoom() {
-    const [activeMicId, setActiveMicId] = useState<string | undefined>();
+    const [activeMicId, setActiveMicId] = useState<string | undefined>(
+        () => typeof window !== "undefined" && localStorage.getItem("defaultMic")
+    );
     const [microphones, setMicrophones] = useState<MediaDeviceInfo[]>([]);
     const activeMicRef = useRef<MediaStream>(new MediaStream());
 
@@ -15,6 +17,7 @@ export default function TeamRoom() {
     };
 
     const getMicrophones = async () => {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
         const devices = await navigator.mediaDevices.enumerateDevices();
         const microphones = devices.filter((device) => device.kind === "audioinput");
         if (!activeMicId) {

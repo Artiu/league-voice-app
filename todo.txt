@@ -1,5 +1,3 @@
--select in start of app doesnt work properly
-
 -images for champions
 -logout button
 -add leave call button
@@ -7,6 +5,7 @@
 -showing yourself
 -improve GUI
 -add minimizing app instead of closing instead
+-handle backend errors
 -splashscreen?
 -icons
 -updater
