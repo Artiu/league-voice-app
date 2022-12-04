@@ -1,3 +1,4 @@
+import { ChakraProvider } from "@chakra-ui/react";
 import AppInfoContextProvider from "contexts/AppInfo";
 import AuthContextProvider from "contexts/Auth";
 import GameStateContextProvider from "contexts/GameState";
@@ -8,11 +9,13 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     return (
         <AppInfoContextProvider>
             <AuthContextProvider>
-                <SocketIOContextProvider>
-                    <GameStateContextProvider>
-                        <Component {...pageProps} />
-                    </GameStateContextProvider>
-                </SocketIOContextProvider>
+                <ChakraProvider>
+                    <SocketIOContextProvider>
+                        <GameStateContextProvider>
+                            <Component {...pageProps} />
+                        </GameStateContextProvider>
+                    </SocketIOContextProvider>
+                </ChakraProvider>
             </AuthContextProvider>
         </AppInfoContextProvider>
     );

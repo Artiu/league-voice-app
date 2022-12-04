@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Card, CardBody, Heading, Skeleton } from "@chakra-ui/react";
 import { Teammate, User } from "types/user";
 
 const getChampionImage = async (championId: number) => {
@@ -40,11 +41,17 @@ export default function JoinedUser({
     }, [championId]);
 
     return (
-        <p>
-            {summonerName}
-            <img src={championImgUrl} width={120} height={120} alt="Champion image" />
-            <audio ref={audioRef} controls autoPlay />
-            {connectionState}
-        </p>
+        <Card w="max-content" p="4" textAlign="center">
+            <CardBody display="flex" flexDir="column" alignItems="center" gap="4">
+                <Heading size="md">{summonerName}</Heading>
+                {championImgUrl ? (
+                    <img src={championImgUrl} width={120} height={120} alt="Champion image" />
+                ) : (
+                    <Skeleton width="120px" height="120px" />
+                )}
+                <audio ref={audioRef} autoPlay />
+                {connectionState}
+            </CardBody>
+        </Card>
     );
 }

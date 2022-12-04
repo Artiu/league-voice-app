@@ -1,6 +1,6 @@
 -logout button
 -add leave call button
--add ChakraUI Card? for connected users, highlighting when using voice, p2p connection state("Connecting", "Connected", "Disconnected")
+-highlighting when using voice
 -showing yourself
 -improve GUI
 -add minimizing app instead of closing instead
