@@ -1,4 +1,3 @@
--add volume changer
 -logout button
 -add leave call button
 -showing yourself

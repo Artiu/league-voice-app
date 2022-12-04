@@ -1,4 +1,5 @@
 import JoinedUser from "components/JoinedUser";
+import { useAuthContext } from "contexts/Auth";
 import { useGameStateContext } from "contexts/GameState";
 import { useSocketIOContext } from "contexts/SocketIO";
 import { useEffect, useRef, useState } from "react";
@@ -9,7 +10,7 @@ export default function TeamRoom() {
         () => typeof window !== "undefined" && localStorage.getItem("defaultMic")
     );
     const [microphones, setMicrophones] = useState<MediaDeviceInfo[]>([]);
-    const activeMicRef = useRef<MediaStream>(new MediaStream());
+    const activeMicRef = useRef(new MediaStream());
 
     const updateMic = (micId: string) => {
         setActiveMicId(micId);
@@ -184,6 +185,8 @@ export default function TeamRoom() {
         };
     }, []);
 
+    const { summonerName } = useAuthContext();
+
     return (
         <>
             <select value={activeMicId} onChange={(e) => updateMic(e.target.value)}>
@@ -193,8 +196,15 @@ export default function TeamRoom() {
                     </option>
                 ))}
             </select>
+            <JoinedUser
+                summonerName={summonerName}
+                connectionState={socket.connected ? "connected" : "disconnected"}
+                championId={teammates.find((val) => val.summonerName === summonerName).championId}
+                isMyself={true}
+                micSrcObject={activeMicRef.current}
+            />
             {joinedUsers.map((user) => (
-                <JoinedUser key={user.socketId} {...user} />
+                <JoinedUser key={user.socketId} {...user} isMyself={false} />
             ))}
         </>
     );

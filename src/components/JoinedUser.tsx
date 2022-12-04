@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Card, CardBody, Heading, Skeleton, Image } from "@chakra-ui/react";
 import hark from "hark";
 import { Teammate, User } from "types/user";
+import VolumeChanger from "./VolumeChanger";
 
 const getChampionImage = async (championId: number) => {
     const latestGameVersion = await fetch("https://ddragon.leagueoflegends.com/api/versions.json")
@@ -22,18 +23,26 @@ const getChampionImage = async (championId: number) => {
     return `http://ddragon.leagueoflegends.com/cdn/${latestGameVersion}/img/champion/${championName}.png`;
 };
 
+interface JoinedUserProps {
+    isMyself: boolean;
+}
+
 export default function JoinedUser({
     summonerName,
     championId,
     micSrcObject,
     connectionState,
-}: User & Teammate) {
+    isMyself,
+}: Omit<User, "socketId"> & Teammate & JoinedUserProps) {
     const [isTalking, setIsTalking] = useState(false);
     const audioRef = useRef<HTMLAudioElement>();
 
     useEffect(() => {
-        if (!micSrcObject || !audioRef.current) return;
-        audioRef.current.srcObject = micSrcObject;
+        if (!micSrcObject || (!audioRef.current && !isMyself)) return;
+        if (!isMyself) {
+            audioRef.current.srcObject = micSrcObject;
+        }
+        if (!micSrcObject.active) return;
         let speechEvents = hark(micSrcObject);
         speechEvents.on("speaking", () => {
             setIsTalking(true);
@@ -53,10 +62,17 @@ export default function JoinedUser({
         getChampionImage(championId).then((imgUrl) => setChampionImgUrl(imgUrl));
     }, [championId]);
 
+    const [volume, setVolume] = useState(100);
+
+    const updateVolume = (newVolume: number) => {
+        setVolume(newVolume);
+        audioRef.current.volume = newVolume / 100;
+    };
+
     return (
         <Card w="max-content" p="4" textAlign="center">
             <CardBody display="flex" flexDir="column" alignItems="center" gap="4">
-                <Heading size="md">{summonerName}</Heading>
+                <Heading size="md">{isMyself ? `You (${summonerName})` : summonerName}</Heading>
                 {championImgUrl ? (
                     <Image
                         src={championImgUrl}
@@ -70,7 +86,12 @@ export default function JoinedUser({
                 ) : (
                     <Skeleton width="120px" height="120px" />
                 )}
-                <audio ref={audioRef} autoPlay />
+                {!isMyself && (
+                    <>
+                        <audio ref={audioRef} autoPlay />
+                        <VolumeChanger volume={volume} onChange={updateVolume} />
+                    </>
+                )}
                 {connectionState}
             </CardBody>
         </Card>
