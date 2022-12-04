@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Card, CardBody, Heading, Skeleton } from "@chakra-ui/react";
+import { Card, CardBody, Heading, Skeleton, Image } from "@chakra-ui/react";
+import hark from "hark";
 import { Teammate, User } from "types/user";
 
 const getChampionImage = async (championId: number) => {
@@ -27,11 +28,23 @@ export default function JoinedUser({
     micSrcObject,
     connectionState,
 }: User & Teammate) {
+    const [isTalking, setIsTalking] = useState(false);
     const audioRef = useRef<HTMLAudioElement>();
 
     useEffect(() => {
         if (!micSrcObject || !audioRef.current) return;
         audioRef.current.srcObject = micSrcObject;
+        let speechEvents = hark(micSrcObject);
+        speechEvents.on("speaking", () => {
+            setIsTalking(true);
+        });
+        speechEvents.on("stopped_speaking", () => {
+            setIsTalking(false);
+        });
+        return () => {
+            speechEvents.stop();
+            speechEvents = null;
+        };
     }, [micSrcObject, audioRef.current]);
 
     const [championImgUrl, setChampionImgUrl] = useState<string>(null);
@@ -45,7 +58,15 @@ export default function JoinedUser({
             <CardBody display="flex" flexDir="column" alignItems="center" gap="4">
                 <Heading size="md">{summonerName}</Heading>
                 {championImgUrl ? (
-                    <img src={championImgUrl} width={120} height={120} alt="Champion image" />
+                    <Image
+                        src={championImgUrl}
+                        width={120}
+                        height={120}
+                        borderStyle="solid"
+                        borderWidth="4px"
+                        borderColor={isTalking ? "green.500" : "transparent"}
+                        alt="Champion image"
+                    />
                 ) : (
                     <Skeleton width="120px" height="120px" />
                 )}

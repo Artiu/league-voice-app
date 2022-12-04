@@ -1,6 +1,6 @@
+-add volume changer
 -logout button
 -add leave call button
--highlighting when using voice
 -showing yourself
 -improve GUI
 -add minimizing app instead of closing instead
