@@ -1,4 +1,5 @@
 import { ChakraProvider } from "@chakra-ui/react";
+import Navbar from "components/Navbar";
 import AppInfoContextProvider from "contexts/AppInfo";
 import AuthContextProvider from "contexts/Auth";
 import GameStateContextProvider from "contexts/GameState";
@@ -12,6 +13,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
                 <ChakraProvider>
                     <SocketIOContextProvider>
                         <GameStateContextProvider>
+                            <Navbar />
                             <Component {...pageProps} />
                         </GameStateContextProvider>
                     </SocketIOContextProvider>

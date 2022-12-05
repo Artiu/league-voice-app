@@ -182,6 +182,9 @@ export default function TeamRoom() {
         return () => {
             socket.off("userJoined", onUserJoined);
             socket.off("signaling", onSignaling);
+            connectionsRef.current.forEach((conn) => {
+                conn.close();
+            });
         };
     }, []);
 

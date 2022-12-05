@@ -1,6 +1,4 @@
--logout button
 -add leave call button
--showing yourself
 -improve GUI
 -add minimizing app instead of closing instead
 -handle backend errors
