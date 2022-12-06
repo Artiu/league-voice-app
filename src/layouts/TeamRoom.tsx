@@ -11,6 +11,7 @@ export default function TeamRoom() {
     );
     const [microphones, setMicrophones] = useState<MediaDeviceInfo[]>([]);
     const activeMicRef = useRef(new MediaStream());
+    const [activeMic, setActiveMic] = useState<MediaStream>();
 
     const updateMic = (micId: string) => {
         setActiveMicId(micId);
@@ -44,6 +45,7 @@ export default function TeamRoom() {
                 });
                 conn.addTrack(mic.getAudioTracks()[0], mic);
             });
+            setActiveMic(mic);
         })();
     }, [activeMicId]);
 
@@ -201,10 +203,10 @@ export default function TeamRoom() {
             </select>
             <JoinedUser
                 summonerName={summonerName}
-                connectionState={socket.connected ? "connected" : "disconnected"}
+                connectionState={"connected"}
                 championId={teammates.find((val) => val.summonerName === summonerName).championId}
                 isMyself={true}
-                micSrcObject={activeMicRef.current}
+                micSrcObject={activeMic}
             />
             {joinedUsers.map((user) => (
                 <JoinedUser key={user.socketId} {...user} isMyself={false} />

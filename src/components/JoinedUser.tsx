@@ -90,9 +90,9 @@ export default function JoinedUser({
                     <>
                         <audio ref={audioRef} autoPlay />
                         <VolumeChanger volume={volume} onChange={updateVolume} />
+                        {connectionState}
                     </>
                 )}
-                {connectionState}
             </CardBody>
         </Card>
     );
