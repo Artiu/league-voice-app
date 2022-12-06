@@ -6,6 +6,7 @@
 use reqwest::{blocking::Client, Certificate};
 use tauri::{
     CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
+    Window,
 };
 const RIOT_CERT: &[u8] = b"-----BEGIN CERTIFICATE-----
 MIIEIDCCAwgCCQDJC+QAdVx4UDANBgkqhkiG9w0BAQUFADCB0TELMAkGA1UEBhMC
@@ -55,9 +56,14 @@ fn get_from_lol_client(path: String, port: i32, password: &str) -> Option<String
     };
 }
 
+fn show_window(window: Window) {
+    window.show().unwrap();
+    window.set_focus().unwrap();
+}
+
 fn main() {
     let quit = CustomMenuItem::new("quit".to_string(), "Quit");
-    let hide = CustomMenuItem::new("hide".to_string(), "Hide");
+    let hide = CustomMenuItem::new("toggle_visibility".to_string(), "Show / Hide");
     let tray_menu = SystemTrayMenu::new()
         .add_item(hide)
         .add_native_item(SystemTrayMenuItem::Separator)
@@ -75,16 +81,19 @@ fn main() {
         .on_system_tray_event(|app, event| match event {
             SystemTrayEvent::LeftClick { .. } => {
                 let window = app.get_window("main").unwrap();
-                window.show().unwrap();
-                window.set_focus().unwrap();
+                show_window(window);
             }
             SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
                 "quit" => {
                     app.exit(0);
                 }
-                "hide" => {
+                "toggle_visibility" => {
                     let window = app.get_window("main").unwrap();
-                    window.hide().unwrap();
+                    if window.is_visible().unwrap() {
+                        window.hide().unwrap();
+                        return;
+                    }
+                    show_window(window);
                 }
                 _ => {}
             },
