@@ -1,3 +1,4 @@
+import { Button } from "@chakra-ui/react";
 import JoinedUser from "components/JoinedUser";
 import { useAuthContext } from "contexts/Auth";
 import { useGameStateContext } from "contexts/GameState";
@@ -58,7 +59,7 @@ export default function TeamRoom() {
     }, []);
 
     const socket = useSocketIOContext();
-    const { teammates } = useGameStateContext();
+    const { teammates, leaveCall } = useGameStateContext();
     const [joinedUsers, setJoinedUsers] = useState<(User & Teammate)[]>([]);
     const connectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
 
@@ -211,6 +212,9 @@ export default function TeamRoom() {
             {joinedUsers.map((user) => (
                 <JoinedUser key={user.socketId} {...user} isMyself={false} />
             ))}
+            <Button backgroundColor="red.500" onClick={leaveCall}>
+                Leave call
+            </Button>
         </>
     );
 }

@@ -1,4 +1,3 @@
--add leave call button
 -improve GUI
 -handle backend errors
 -splashscreen?

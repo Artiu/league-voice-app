@@ -40,16 +40,20 @@ export default function useLeagueClient() {
         return status?.replaceAll('"', "");
     };
 
+    const checkIsInGame = async () => {
+        const gameflow = await getGameflowPhase();
+        setIsInMatch(gameflow === "InProgress");
+    };
+
     useEffect(() => {
         if (!isTauri) return;
         let interval: NodeJS.Timer;
         if (!isOpen) {
+            checkProcess();
             interval = setInterval(checkProcess, 3000);
         } else {
-            interval = setInterval(async () => {
-                const gameflow = await getGameflowPhase();
-                setIsInMatch(gameflow === "InProgress");
-            }, 1000);
+            checkIsInGame();
+            interval = setInterval(checkIsInGame, 1000);
         }
         return () => {
             clearInterval(interval);
