@@ -1,4 +1,5 @@
--improve GUI
+-mute button
+-dark mode, colors
 -handle backend errors
 -splashscreen?
 -icons

@@ -70,7 +70,7 @@ export default function JoinedUser({
     };
 
     return (
-        <Card w="max-content" p="4" textAlign="center">
+        <Card px="12" py="4" textAlign="center">
             <CardBody display="flex" flexDir="column" alignItems="center" gap="4">
                 <Heading size="md">{isMyself ? `You (${summonerName})` : summonerName}</Heading>
                 {championImgUrl ? (

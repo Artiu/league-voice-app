@@ -1,4 +1,4 @@
-import { Button } from "@chakra-ui/react";
+import { Button, Container, Flex, Select, Text } from "@chakra-ui/react";
 import JoinedUser from "components/JoinedUser";
 import { useAuthContext } from "contexts/Auth";
 import { useGameStateContext } from "contexts/GameState";
@@ -194,27 +194,36 @@ export default function TeamRoom() {
     const { summonerName } = useAuthContext();
 
     return (
-        <>
-            <select value={activeMicId} onChange={(e) => updateMic(e.target.value)}>
+        <Container maxW="container.xl" width="full">
+            <Text fontWeight="semibold" fontSize="xl">
+                Microphones:
+            </Text>
+            <Select value={activeMicId} onChange={(e) => updateMic(e.target.value)} marginTop="2">
                 {microphones.map((mic) => (
                     <option key={mic.deviceId} value={mic.deviceId}>
                         {mic.label}
                     </option>
                 ))}
-            </select>
-            <JoinedUser
-                summonerName={summonerName}
-                connectionState={"connected"}
-                championId={teammates.find((val) => val.summonerName === summonerName).championId}
-                isMyself={true}
-                micSrcObject={activeMic}
-            />
-            {joinedUsers.map((user) => (
-                <JoinedUser key={user.socketId} {...user} isMyself={false} />
-            ))}
-            <Button backgroundColor="red.500" onClick={leaveCall}>
-                Leave call
-            </Button>
-        </>
+            </Select>
+            <Flex flexWrap="wrap" paddingBlock="8" justifyContent="center" gap="10">
+                <JoinedUser
+                    summonerName={summonerName}
+                    connectionState={"connected"}
+                    championId={
+                        teammates.find((val) => val.summonerName === summonerName).championId
+                    }
+                    isMyself={true}
+                    micSrcObject={activeMic}
+                />
+                {joinedUsers.map((user) => (
+                    <JoinedUser key={user.socketId} {...user} isMyself={false} />
+                ))}
+            </Flex>
+            <Flex justifyContent="center">
+                <Button backgroundColor="red.500" onClick={leaveCall}>
+                    Leave call
+                </Button>
+            </Flex>
+        </Container>
     );
 }
