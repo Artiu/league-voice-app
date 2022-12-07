@@ -1,5 +1,5 @@
 -mute button
--dark mode, colors
+-colors
 -handle backend errors
 -splashscreen?
 -icons
