@@ -1,5 +1,4 @@
 -mute button
--colors
 -handle backend errors
 -splashscreen?
 -icons

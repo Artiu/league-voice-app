@@ -69,6 +69,11 @@ export default function TeamRoom() {
         activeMicRef.current.getAudioTracks().forEach((track) => {
             peerConnection.addTrack(track, activeMicRef.current);
         });
+        const prevConnection = connectionsRef.current.get(socketId);
+        if (prevConnection) {
+            prevConnection.close();
+            setJoinedUsers((users) => users.filter((user) => user.socketId !== socketId));
+        }
         connectionsRef.current.set(socketId, peerConnection);
         setJoinedUsers((users) => [
             ...users,
