@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Card, CardBody, Heading, Skeleton, Image } from "@chakra-ui/react";
+import { Card, CardBody, Heading, Skeleton, Image, Button } from "@chakra-ui/react";
 import hark from "hark";
 import { Teammate, User } from "types/user";
 import VolumeChanger from "./VolumeChanger";
@@ -69,6 +69,14 @@ export default function JoinedUser({
         audioRef.current.volume = newVolume / 100;
     };
 
+    const [isMuted, setIsMuted] = useState(false);
+
+    const toggleMicMute = () => {
+        if (!micSrcObject) return;
+        micSrcObject.getAudioTracks()[0].enabled = !micSrcObject.getAudioTracks()[0].enabled;
+        setIsMuted((val) => !val);
+    };
+
     return (
         <Card px="12" py="4" textAlign="center">
             <CardBody display="flex" flexDir="column" alignItems="center" gap="4">
@@ -86,7 +94,11 @@ export default function JoinedUser({
                 ) : (
                     <Skeleton width="120px" height="120px" />
                 )}
-                {!isMyself && (
+                {isMyself ? (
+                    <Button backgroundColor={isMuted && "red.500"} onClick={toggleMicMute}>
+                        {isMuted ? "Muted" : "Mute"}
+                    </Button>
+                ) : (
                     <>
                         <audio ref={audioRef} autoPlay />
                         <VolumeChanger volume={volume} onChange={updateVolume} />

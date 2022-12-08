@@ -1,4 +1,3 @@
--mute button
 -handle backend errors
 -splashscreen?
 -icons
