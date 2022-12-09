@@ -1,3 +1,4 @@
+import { useToast } from "@chakra-ui/react";
 import { createContext, useContext, useEffect } from "react";
 import { io } from "socket.io-client";
 import { useAuthContext } from "./Auth";
@@ -10,13 +11,30 @@ const socketIO = io(process.env.NEXT_PUBLIC_BACKEND_URL, {
 const SocketIOContext = createContext(socketIO);
 
 export default function SocketIOContextProvider({ children }) {
-    const { summonerName, isLoggedIn } = useAuthContext();
+    const { summonerName, isLoggedIn, logOut } = useAuthContext();
+    const toast = useToast();
+
     useEffect(() => {
         if (socketIO.connected && isLoggedIn) return;
-        if (!isLoggedIn) socketIO.disconnect();
+        if (!isLoggedIn) {
+            socketIO.disconnect();
+            return;
+        }
         socketIO.auth = { summonerName };
+        socketIO.on("connect_error", (err) => {
+            if (err.message === "unauthorized") {
+                toast({
+                    title: "Unauthorized",
+                    status: "error",
+                    duration: 9000,
+                    isClosable: true,
+                });
+                logOut();
+            }
+        });
         socketIO.connect();
         return () => {
+            socketIO.off("connect_error");
             if (!socketIO.connected) return;
             socketIO.disconnect();
         };

@@ -1,4 +1,3 @@
--handle backend errors
 -splashscreen?
 -icons
 -updater
