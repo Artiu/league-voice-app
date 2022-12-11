@@ -3,16 +3,19 @@ import { Card, CardBody, Heading, Skeleton, Image, Button } from "@chakra-ui/rea
 import hark from "hark";
 import { Teammate, User } from "types/user";
 import VolumeChanger from "./VolumeChanger";
+import { fetch } from "@tauri-apps/api/http";
 
 const getChampionImage = async (championId: number) => {
-    const latestGameVersion = await fetch("https://ddragon.leagueoflegends.com/api/versions.json")
-        .then((res) => res.json())
+    const latestGameVersion = await fetch<any>(
+        "https://ddragon.leagueoflegends.com/api/versions.json"
+    )
+        .then((res) => res.data)
         .then((data) => data[0]);
 
-    const championName = await fetch(
+    const championName = await fetch<any>(
         `http://ddragon.leagueoflegends.com/cdn/${latestGameVersion}/data/en_US/champion.json`
     )
-        .then((res) => res.json())
+        .then((res) => res.data)
         .then(({ data }) => {
             for (const property in data) {
                 if (Number(data[property].key) === championId) {
