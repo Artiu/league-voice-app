@@ -1,7 +1,8 @@
 {
   "name": "league-voice-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.3.0",
+  "author": "Artiu",
   "scripts": {
     "dev": "next dev -p 1420",
     "start": "next build && next start",

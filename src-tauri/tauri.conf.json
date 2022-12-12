@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "League Voice",
-    "version": "0.2.0"
+    "version": "0.3.0"
   },
   "tauri": {
     "allowlist": {
@@ -46,7 +46,7 @@
         "signingIdentity": null
       },
       "resources": [],
-      "shortDescription": "",
+      "shortDescription": "League voice is app which connects you with your teammates from LoL match.",
       "targets": "all",
       "windows": {
         "certificateThumbprint": null,
@@ -74,6 +74,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
+        "theme": "Dark",
         "title": "League Voice",
         "width": 800
       }
