@@ -30,6 +30,15 @@ export default function SocketIOContextProvider({ children }) {
                 });
                 logOut();
             }
+            if (err.message === "rate-limit") {
+                toast({
+                    title: "Too many login attempts. Try again later!",
+                    status: "error",
+                    duration: 9000,
+                    isClosable: true,
+                });
+                logOut();
+            }
         });
         socketIO.connect();
         return () => {
