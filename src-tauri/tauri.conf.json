@@ -45,6 +45,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
+      "publisher": "Artiu",
       "resources": [],
       "shortDescription": "League voice is app which connects you with your teammates from LoL match.",
       "targets": "all",
