@@ -8,6 +8,11 @@ use tauri::{
     CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
     Window,
 };
+use windows::{
+    s,
+    Win32::UI::WindowsAndMessaging::{FindWindowA, ShowWindow, SW_SHOWDEFAULT},
+};
+
 const RIOT_CERT: &[u8] = b"-----BEGIN CERTIFICATE-----
 MIIEIDCCAwgCCQDJC+QAdVx4UDANBgkqhkiG9w0BAQUFADCB0TELMAkGA1UEBhMC
 VVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFTATBgNVBAcTDFNhbnRhIE1vbmljYTET
@@ -62,6 +67,13 @@ fn show_window(window: Window) {
 }
 
 fn main() {
+    unsafe {
+        let window = FindWindowA(None, s!("League Voice"));
+        if window.0 != 0 {
+            ShowWindow(window, SW_SHOWDEFAULT);
+            return;
+        }
+    }
     let quit = CustomMenuItem::new("quit".to_string(), "Quit");
     let hide = CustomMenuItem::new("toggle_visibility".to_string(), "Show / Hide");
     let tray_menu = SystemTrayMenu::new()
