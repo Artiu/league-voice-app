@@ -10,7 +10,9 @@ use tauri::{
 };
 use windows::{
     s,
-    Win32::UI::WindowsAndMessaging::{FindWindowA, ShowWindow, SW_SHOWDEFAULT},
+    Win32::UI::WindowsAndMessaging::{
+        FindWindowA, SetForegroundWindow, ShowWindow, SW_SHOWDEFAULT,
+    },
 };
 
 const RIOT_CERT: &[u8] = b"-----BEGIN CERTIFICATE-----
@@ -62,6 +64,8 @@ fn get_from_lol_client(path: String, port: i32, password: &str) -> Option<String
 }
 
 fn show_window(window: Window) {
+    //Doubled events are there because if I'm changing window state by win32, windowState in tauri is not being updated
+    window.hide().unwrap();
     window.show().unwrap();
     window.set_focus().unwrap();
 }
@@ -71,6 +75,7 @@ fn main() {
         let window = FindWindowA(None, s!("League Voice"));
         if window.0 != 0 {
             ShowWindow(window, SW_SHOWDEFAULT);
+            SetForegroundWindow(window);
             return;
         }
     }
@@ -85,6 +90,7 @@ fn main() {
         .on_window_event(|event| match event.event() {
             tauri::WindowEvent::CloseRequested { api, .. } => {
                 api.prevent_close();
+                event.window().show().unwrap();
                 event.window().hide().unwrap();
             }
             _ => {}
@@ -102,6 +108,7 @@ fn main() {
                 "toggle_visibility" => {
                     let window = app.get_window("main").unwrap();
                     if window.is_visible().unwrap() {
+                        window.show().unwrap();
                         window.hide().unwrap();
                         return;
                     }
