@@ -5,7 +5,7 @@
   "author": "Artiu",
   "scripts": {
     "dev": "next dev -p 1420",
-    "start": "next build && next start",
+    "start": "next build && next start -p 4001",
     "build": "next build && next export -o dist",
     "tauri": "tauri"
   },
