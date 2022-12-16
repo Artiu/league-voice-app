@@ -47,7 +47,7 @@ export default function JoinedUser({
             .then((data) => data[0]);
 
         const championListLink = `https://ddragon.leagueoflegends.com/cdn/${latestGameVersion}/data/en_US/champion.json`;
-        const championName = fetch(championListLink)
+        const championName = await fetch(championListLink)
             .then((res) => res.json())
             .then(({ data }) => {
                 for (const property in data) {
