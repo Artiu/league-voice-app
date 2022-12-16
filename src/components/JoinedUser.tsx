@@ -24,7 +24,7 @@ export default function JoinedUser({
             audioRef.current.srcObject = micSrcObject;
         }
         if (!micSrcObject.active) return;
-        let speechEvents = hark(micSrcObject);
+        let speechEvents = hark(micSrcObject, { threshold: -70 });
         speechEvents.on("speaking", () => {
             setIsTalking(true);
         });
