@@ -15,10 +15,6 @@
       "shell": {
         "execute": true,
         "scope": [{ "name": "get-league-process", "cmd": "cmd", "args": ["/C", "WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline"]}]
-      },
-      "http": {
-        "request": true,
-        "scope": ["http://ddragon.leagueoflegends.com/cdn/*/data/en_US/champion.json", "https://ddragon.leagueoflegends.com/api/versions.json"]
       }
     },
     "bundle": {
