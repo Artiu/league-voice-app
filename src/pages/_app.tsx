@@ -1,4 +1,5 @@
-import { ChakraProvider } from "@chakra-ui/react";
+import { Box, ChakraProvider } from "@chakra-ui/react";
+import Footer from "components/Footer";
 import Navbar from "components/Navbar";
 import AppInfoContextProvider from "contexts/AppInfo";
 import AuthContextProvider from "contexts/Auth";
@@ -21,8 +22,13 @@ export default function MyApp({ Component, pageProps }: AppProps) {
                     <ChakraProvider>
                         <SocketIOContextProvider>
                             <GameStateContextProvider>
-                                <Navbar />
-                                <Component {...pageProps} />
+                                <Box display="flex" flexDir="column" minHeight="100vh">
+                                    <Navbar />
+                                    <Box flex="1">
+                                        <Component {...pageProps} />
+                                    </Box>
+                                    <Footer />
+                                </Box>
                             </GameStateContextProvider>
                         </SocketIOContextProvider>
                     </ChakraProvider>
