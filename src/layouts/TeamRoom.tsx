@@ -41,7 +41,7 @@ export default function TeamRoom() {
                     summonerName={summonerName}
                     connectionState={"connected"}
                     championId={
-                        teammates.find((val) => val.summonerName === summonerName).championId
+                        teammates.find((val) => val.summonerName === summonerName)?.championId
                     }
                     isMyself={true}
                     micSrcObject={activeMic}

@@ -17,7 +17,7 @@ export default function Footer() {
                 href="https://api.league-voice.site/releases/LeagueVoice.msi"
                 download
             >
-                Download
+                Download for Windows
             </Button>
         </Box>
     );
