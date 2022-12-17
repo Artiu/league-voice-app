@@ -5,6 +5,7 @@ import ContextProviders from "contexts/Providers";
 import { NextSeo } from "next-seo";
 import type { AppProps } from "next/app";
 import logo from "../public/logo.png";
+import adapter from "webrtc-adapter";
 
 export default function MyApp({ Component, pageProps }: AppProps) {
     return (
