@@ -77,10 +77,7 @@ export default function useWebRTC({ micRef }: useWebRTCProps) {
                 });
                 return copy;
             });
-            if (
-                peerConnection.connectionState === "failed" ||
-                peerConnection.connectionState === "closed"
-            ) {
+            if (peerConnection.connectionState === "closed") {
                 connectionsRef.current.delete(socketId);
                 setJoinedUsers((users) => users.filter((user) => user.socketId !== socketId));
             }
