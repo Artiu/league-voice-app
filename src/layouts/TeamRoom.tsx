@@ -4,7 +4,7 @@ import { useAuthContext } from "contexts/Auth";
 import { useGameStateContext } from "contexts/GameState";
 import useMic from "hooks/useMic";
 import useWebRTC from "hooks/useWebRTC";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 export default function TeamRoom() {
     const { summonerName } = useAuthContext();

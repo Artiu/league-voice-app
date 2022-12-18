@@ -1,5 +1,7 @@
+import { useToast } from "@chakra-ui/react";
 import useLeagueClient from "hooks/useLeagueClient";
 import { createContext, useContext, useEffect, useState } from "react";
+import { Error } from "types/error";
 import { Teammate } from "types/user";
 import { useAppInfoContext } from "./AppInfo";
 import { useSocketIOContext } from "./SocketIO";
@@ -15,6 +17,7 @@ interface GameState {
 const GameStateContext = createContext<GameState>(undefined);
 
 export default function GameStateContextProvider({ children }) {
+    const toast = useToast();
     const socket = useSocketIOContext();
     const { isInMatch } = useLeagueClient();
     const { isTauri } = useAppInfoContext();
@@ -32,6 +35,7 @@ export default function GameStateContextProvider({ children }) {
     }, [isInMatch]);
 
     const leaveCall = () => {
+        socket.emit("leaveCall");
         setTeammates([]);
         if (isTauri && isInMatch) {
             setHasLeftCall(true);
@@ -44,8 +48,16 @@ export default function GameStateContextProvider({ children }) {
     }, [isInMatch]);
 
     useEffect(() => {
-        const onMatchStarted = (teammates: Teammate[]) => {
-            setTeammates(teammates);
+        const onMatchStarted = (payload: Teammate[] | Error) => {
+            if ((payload as Error).error === "account-currently-in-room") {
+                toast({
+                    description:
+                        "You are currently in this call on different device. Only one device can be connected to call.",
+                    status: "info",
+                });
+                return;
+            }
+            setTeammates(payload as Teammate[]);
             setHasLeftCall(false);
         };
         socket.on("matchStarted", onMatchStarted);

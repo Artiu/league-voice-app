@@ -43,6 +43,7 @@ export default function useMic() {
         updateMicrophones();
         return () => {
             navigator.mediaDevices.removeEventListener("devicechange", getMicrophones);
+            activeMicRef.current.getTracks().forEach((track) => track.stop());
         };
     }, []);
 

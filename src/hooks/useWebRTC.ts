@@ -77,10 +77,6 @@ export default function useWebRTC({ micRef }: useWebRTCProps) {
                 });
                 return copy;
             });
-            if (peerConnection.connectionState === "closed") {
-                connectionsRef.current.delete(socketId);
-                setJoinedUsers((users) => users.filter((user) => user.socketId !== socketId));
-            }
         });
         return peerConnection;
     };
@@ -133,6 +129,15 @@ export default function useWebRTC({ micRef }: useWebRTCProps) {
         };
         socket.on("userJoined", onUserJoined);
 
+        const onUserLeft = ({ id }) => {
+            setJoinedUsers((users) => users.filter((user) => user.socketId !== id));
+            const conn = connectionsRef.current.get(id);
+            if (!conn) return;
+            conn.close();
+            connectionsRef.current.delete(id);
+        };
+        socket.on("userLeft", onUserLeft);
+
         const onSignaling = async (
             { description, candidate },
             authData: { id: string; summonerName: string }
@@ -143,6 +148,7 @@ export default function useWebRTC({ micRef }: useWebRTCProps) {
 
         return () => {
             socket.off("userJoined", onUserJoined);
+            socket.off("userLeft", onUserLeft);
             socket.off("signaling", onSignaling);
             connectionsRef.current.forEach((conn) => {
                 conn.close();
