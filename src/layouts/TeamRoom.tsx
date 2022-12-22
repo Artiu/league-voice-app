@@ -34,6 +34,7 @@ export default function TeamRoom() {
         };
         socket.on("disconnect", onDisconnected);
         return () => {
+            leaveCall();
             socket.off("disconnect", onDisconnected);
             socket.off("connect", onReconnection);
         };

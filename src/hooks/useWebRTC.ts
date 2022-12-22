@@ -124,20 +124,6 @@ export default function useWebRTC({ micRef }: useWebRTCProps) {
     };
 
     useEffect(() => {
-        const onUserJoined = async ({ id, summonerName }) => {
-            await createPeerConnection(id, summonerName);
-        };
-        socket.on("userJoined", onUserJoined);
-
-        const onUserLeft = ({ id }) => {
-            setJoinedUsers((users) => users.filter((user) => user.socketId !== id));
-            const conn = connectionsRef.current.get(id);
-            if (!conn) return;
-            conn.close();
-            connectionsRef.current.delete(id);
-        };
-        socket.on("userLeft", onUserLeft);
-
         const onSignaling = async (
             { description, candidate },
             authData: { id: string; summonerName: string }
@@ -147,14 +133,47 @@ export default function useWebRTC({ micRef }: useWebRTCProps) {
         socket.on("signaling", onSignaling);
 
         return () => {
-            socket.off("userJoined", onUserJoined);
-            socket.off("userLeft", onUserLeft);
             socket.off("signaling", onSignaling);
             connectionsRef.current.forEach((conn) => {
                 conn.close();
             });
         };
     }, []);
+
+    useEffect(() => {
+        const onUserJoined = async ({ id, summonerName }) => {
+            const existingConnectedUser = joinedUsers.find(
+                (user) => user.summonerName === summonerName
+            );
+
+            if (existingConnectedUser) {
+                const peerConnection = connectionsRef.current.get(existingConnectedUser.socketId);
+                connectionsRef.current.delete(existingConnectedUser.socketId);
+                connectionsRef.current.set(id, peerConnection);
+                setJoinedUsers((users) => [
+                    ...users.filter((user) => user.summonerName !== summonerName),
+                    { ...existingConnectedUser, socketId: id },
+                ]);
+                return;
+            }
+            await createPeerConnection(id, summonerName);
+        };
+        socket.on("userJoined", onUserJoined);
+
+        const onUserLeft = ({ id }) => {
+            const conn = connectionsRef.current.get(id);
+            setJoinedUsers((users) => users.filter((user) => user.socketId !== id));
+            if (!conn) return;
+            conn.close();
+            connectionsRef.current.delete(id);
+        };
+        socket.on("userLeft", onUserLeft);
+
+        return () => {
+            socket.off("userJoined", onUserJoined);
+            socket.off("userLeft", onUserLeft);
+        };
+    }, [joinedUsers]);
 
     return {
         joinedUsers,
