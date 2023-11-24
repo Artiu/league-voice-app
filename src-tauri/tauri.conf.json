@@ -1,80 +1,87 @@
 {
-  "build": {
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
-    "devPath": "http://localhost:1420",
-    "distDir": "../dist",
-    "withGlobalTauri": false
-  },
-  "package": {
-    "productName": "League Voice",
-    "version": "0.5.2"
-  },
-  "tauri": {
-    "allowlist": {
-      "shell": {
-        "execute": true,
-        "scope": [{ "name": "get-league-process", "cmd": "cmd", "args": ["/C", "WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline"]}]
-      }
-    },
-    "bundle": {
-      "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
-      "deb": {
-        "depends": []
-      },
-      "externalBin": [],
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "identifier": "site.league-voice",
-      "longDescription": "",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
-      },
-      "publisher": "Artiu",
-      "resources": [],
-      "shortDescription": "League voice is app which connects you with your teammates from LoL match.",
-      "targets": "all",
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": ""
-      }
-    },
-    "security": {
-      "csp": null
-    },
-    "systemTray": {
-        "iconPath": "icons/icon.png",
-        "iconAsTemplate": true
-    },
-    "updater": {
-      "active": true,
-      "endpoints": [
-          "https://api.league-voice.site/releases/{{current_version}}"
-      ],
-      "dialog": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZENzQ1OTI1RTRCRjExMEEKUldRS0ViL2tKVmwwYlp6YkRhRkt6dE9ranZnRzZiTGhRV252YVVpTEcrdkNncmVPSVdSZ00xSUMK"
-    },
-    "windows": [
-      {
-        "fullscreen": false,
-        "height": 600,
-        "resizable": true,
-        "theme": "Dark",
-        "title": "League Voice",
-        "width": 800
-      }
-    ]
-  }
+	"build": {
+		"beforeDevCommand": "npm run dev",
+		"beforeBuildCommand": "npm run build",
+		"devPath": "http://localhost:1420",
+		"distDir": "../dist",
+		"withGlobalTauri": false
+	},
+	"package": {
+		"productName": "League Voice",
+		"version": "0.5.3"
+	},
+	"tauri": {
+		"allowlist": {
+			"shell": {
+				"execute": true,
+				"scope": [
+					{
+						"name": "get-league-process",
+						"cmd": "cmd",
+						"args": [
+							"/C",
+							"WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline"
+						]
+					}
+				]
+			}
+		},
+		"bundle": {
+			"active": true,
+			"category": "DeveloperTool",
+			"copyright": "",
+			"deb": {
+				"depends": []
+			},
+			"externalBin": [],
+			"icon": [
+				"icons/32x32.png",
+				"icons/128x128.png",
+				"icons/128x128@2x.png",
+				"icons/icon.icns",
+				"icons/icon.ico"
+			],
+			"identifier": "site.league-voice",
+			"longDescription": "",
+			"macOS": {
+				"entitlements": null,
+				"exceptionDomain": "",
+				"frameworks": [],
+				"providerShortName": null,
+				"signingIdentity": null
+			},
+			"publisher": "Artiu",
+			"resources": [],
+			"shortDescription": "League voice is app which connects you with your teammates from LoL match.",
+			"targets": "all",
+			"windows": {
+				"certificateThumbprint": null,
+				"digestAlgorithm": "sha256",
+				"timestampUrl": ""
+			}
+		},
+		"security": {
+			"csp": null
+		},
+		"systemTray": {
+			"iconPath": "icons/icon.png",
+			"iconAsTemplate": true
+		},
+		"updater": {
+			"active": true,
+			"endpoints": ["https://league-voice-api.artiu.dev/releases/{{current_version}}"],
+			"dialog": true,
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZENzQ1OTI1RTRCRjExMEEKUldRS0ViL2tKVmwwYlp6YkRhRkt6dE9ranZnRzZiTGhRV252YVVpTEcrdkNncmVPSVdSZ00xSUMK"
+		},
+		"windows": [
+			{
+				"fullscreen": false,
+				"height": 600,
+				"resizable": true,
+				"theme": "Dark",
+				"title": "League Voice",
+				"width": 800
+			}
+		]
+	}
 }
