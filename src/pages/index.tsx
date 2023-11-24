@@ -5,16 +5,16 @@ import TeamRoom from "layouts/TeamRoom";
 import WaitingForMatch from "layouts/WaitingForMatch";
 
 export default function App() {
-    const { isLoggedIn } = useAuthContext();
-    const { isInMatch } = useGameStateContext();
+	const { isLoggedIn } = useAuthContext();
+	const { isInMatch } = useGameStateContext();
 
-    if (!isLoggedIn) {
-        return <LoginForm />;
-    }
+	if (!isLoggedIn) {
+		return <LoginForm />;
+	}
 
-    if (!isInMatch) {
-        return <WaitingForMatch />;
-    }
+	if (!isInMatch) {
+		return <WaitingForMatch />;
+	}
 
-    return <TeamRoom />;
+	return <TeamRoom />;
 }

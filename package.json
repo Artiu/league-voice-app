@@ -1,34 +1,34 @@
 {
-  "name": "league-voice-app",
-  "private": true,
-  "version": "0.3.0",
-  "author": "Artiu",
-  "scripts": {
-    "dev": "next dev -p 1420",
-    "start": "next build && next start -p 4001",
-    "build": "next build && next export -o dist",
-    "tauri": "tauri"
-  },
-  "dependencies": {
-    "@chakra-ui/react": "^2.4.2",
-    "@emotion/react": "^11.10.5",
-    "@emotion/styled": "^11.10.5",
-    "@tauri-apps/api": "^1.2.0",
-    "framer-motion": "^7.6.18",
-    "hark": "^1.2.3",
-    "next": "^12.2.5",
-    "next-seo": "^5.15.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "socket.io-client": "^4.5.3",
-    "webrtc-adapter": "^8.2.0"
-  },
-  "devDependencies": {
-    "@tauri-apps/cli": "^1.2.2",
-    "@types/hark": "^1.2.2",
-    "@types/node": "^18.7.11",
-    "@types/react": "^18.0.17",
-    "@types/react-dom": "^18.0.6",
-    "typescript": "^4.7.4"
-  }
+	"name": "league-voice-app",
+	"private": true,
+	"version": "0.3.0",
+	"author": "Artiu",
+	"scripts": {
+		"dev": "next dev -p 1420",
+		"start": "next build && next start -p 4001",
+		"build": "next build && next export -o dist",
+		"tauri": "tauri"
+	},
+	"dependencies": {
+		"@chakra-ui/react": "^2.4.2",
+		"@emotion/react": "^11.10.5",
+		"@emotion/styled": "^11.10.5",
+		"@tauri-apps/api": "^1.2.0",
+		"framer-motion": "^7.6.18",
+		"hark": "^1.2.3",
+		"next": "^12.2.5",
+		"next-seo": "^5.15.0",
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0",
+		"socket.io-client": "^4.5.3",
+		"webrtc-adapter": "^8.2.0"
+	},
+	"devDependencies": {
+		"@tauri-apps/cli": "^1.2.2",
+		"@types/hark": "^1.2.2",
+		"@types/node": "^18.7.11",
+		"@types/react": "^18.0.17",
+		"@types/react-dom": "^18.0.6",
+		"typescript": "^4.7.4"
+	}
 }
