@@ -9,7 +9,7 @@ interface JoinedUserProps {
 }
 
 export default function JoinedUser({
-	summonerName,
+	riotId,
 	championId,
 	micSrcObject,
 	connectionState,
@@ -81,7 +81,7 @@ export default function JoinedUser({
 	return (
 		<Card px="12" py="4" textAlign="center">
 			<CardBody display="flex" flexDir="column" alignItems="center" gap="4">
-				<Heading size="md">{isMyself ? `You (${summonerName})` : summonerName}</Heading>
+				<Heading size="md">{isMyself ? `You (${riotId})` : riotId}</Heading>
 				{championImgUrl ? (
 					<Image
 						src={championImgUrl}

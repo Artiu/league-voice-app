@@ -8,7 +8,7 @@ import useWebRTC from "hooks/useWebRTC";
 import { useEffect, useMemo } from "react";
 
 export default function TeamRoom() {
-	const { summonerName } = useAuthContext();
+	const { riotId } = useAuthContext();
 	const { teammates, leaveCall } = useGameStateContext();
 	const socket = useSocketIOContext();
 
@@ -19,7 +19,7 @@ export default function TeamRoom() {
 		() =>
 			joinedUsers.map((user) => ({
 				...user,
-				...teammates.find((teammate) => teammate.summonerName === user.summonerName),
+				...teammates.find((teammate) => teammate.riotId === user.riotId),
 			})),
 		[joinedUsers, teammates]
 	);
@@ -54,10 +54,11 @@ export default function TeamRoom() {
 			</Select>
 			<Flex flexWrap="wrap" paddingBlock="8" justifyContent="center" gap="10">
 				<JoinedUser
-					summonerName={summonerName}
+					riotId={riotId}
 					connectionState={"connected"}
 					championId={
-						teammates.find((val) => val.summonerName === summonerName)?.championId
+						teammates.find((val) => val.riotId.toLowerCase() === riotId.toLowerCase())
+							?.championId
 					}
 					isMyself={true}
 					micSrcObject={activeMic}

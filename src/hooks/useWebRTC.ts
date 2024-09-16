@@ -12,7 +12,7 @@ export default function useWebRTC({ micRef }: useWebRTCProps) {
 	const [joinedUsers, setJoinedUsers] = useState<User[]>([]);
 	const connectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
 
-	const createPeerConnection = async (socketId: string, summonerName: string) => {
+	const createPeerConnection = async (socketId: string, riotId: string) => {
 		const configuration = { iceServers: [{ urls: "stun:openrelay.metered.ca:80" }] };
 		const peerConnection = new RTCPeerConnection(configuration);
 		micRef.current.getAudioTracks().forEach((track) => {
@@ -28,7 +28,7 @@ export default function useWebRTC({ micRef }: useWebRTCProps) {
 			...users,
 			{
 				socketId,
-				summonerName,
+				riotId,
 				connectionState: peerConnection.connectionState,
 			},
 		]);
@@ -84,11 +84,11 @@ export default function useWebRTC({ micRef }: useWebRTCProps) {
 	const connectToPeer = async (
 		description: RTCSessionDescriptionInit,
 		candidate: RTCIceCandidateInit,
-		authData: { id: string; summonerName: string }
+		authData: { id: string; riotId: string }
 	) => {
 		let peerConnection = connectionsRef.current.get(authData.id);
 		if (!peerConnection) {
-			peerConnection = await createPeerConnection(authData.id, authData.summonerName);
+			peerConnection = await createPeerConnection(authData.id, authData.riotId);
 		}
 		try {
 			if (description) {
@@ -126,7 +126,7 @@ export default function useWebRTC({ micRef }: useWebRTCProps) {
 	useEffect(() => {
 		const onSignaling = async (
 			{ description, candidate },
-			authData: { id: string; summonerName: string }
+			authData: { id: string; riotId: string }
 		) => {
 			await connectToPeer(description, candidate, authData);
 		};
@@ -141,22 +141,20 @@ export default function useWebRTC({ micRef }: useWebRTCProps) {
 	}, []);
 
 	useEffect(() => {
-		const onUserJoined = async ({ id, summonerName }) => {
-			const existingConnectedUser = joinedUsers.find(
-				(user) => user.summonerName === summonerName
-			);
+		const onUserJoined = async ({ id, riotId }) => {
+			const existingConnectedUser = joinedUsers.find((user) => user.riotId === riotId);
 
 			if (existingConnectedUser) {
 				const peerConnection = connectionsRef.current.get(existingConnectedUser.socketId);
 				connectionsRef.current.delete(existingConnectedUser.socketId);
 				connectionsRef.current.set(id, peerConnection);
 				setJoinedUsers((users) => [
-					...users.filter((user) => user.summonerName !== summonerName),
+					...users.filter((user) => user.riotId !== riotId),
 					{ ...existingConnectedUser, socketId: id },
 				]);
 				return;
 			}
-			await createPeerConnection(id, summonerName);
+			await createPeerConnection(id, riotId);
 		};
 		socket.on("userJoined", onUserJoined);
 

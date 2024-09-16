@@ -4,11 +4,12 @@ import { FormEvent, useState } from "react";
 
 export default function LoginForm() {
 	const [summonerName, setSummonerName] = useState("");
-	const { updateSummonerName } = useAuthContext();
+	const [tag, setTag] = useState("");
+	const { updateRiotId } = useAuthContext();
 
 	const submitForm = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		updateSummonerName(summonerName);
+		updateRiotId(`${summonerName}#${tag}`);
 	};
 
 	return (
@@ -22,7 +23,14 @@ export default function LoginForm() {
 						onChange={(e) => setSummonerName(e.target.value)}
 						value={summonerName}
 					/>
-					<Text>EUNE</Text>
+					<Text>#</Text>
+					<Input
+						w={20}
+						maxLength={4}
+						type="text"
+						onChange={(e) => setTag(e.target.value)}
+						value={tag}
+					/>
 				</Flex>
 				<Button type="submit" marginTop="3">
 					Log in

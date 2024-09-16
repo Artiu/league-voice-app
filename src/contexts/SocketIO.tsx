@@ -10,7 +10,7 @@ const socketIO = io(process.env.NEXT_PUBLIC_BACKEND_URL, {
 const SocketIOContext = createContext(socketIO);
 
 export default function SocketIOContextProvider({ children }) {
-	const { summonerName, isLoggedIn, logOut } = useAuthContext();
+	const { riotId, isLoggedIn, logOut } = useAuthContext();
 	const toast = useToast();
 
 	useEffect(() => {
@@ -19,7 +19,8 @@ export default function SocketIOContextProvider({ children }) {
 			socketIO.disconnect();
 			return;
 		}
-		socketIO.auth = { summonerName };
+		const [username, tag] = riotId.split("#");
+		socketIO.auth = { username, tag };
 		socketIO.on("connect_error", (err) => {
 			if (err.message === "unauthorized") {
 				toast({

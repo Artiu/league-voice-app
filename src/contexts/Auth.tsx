@@ -1,35 +1,33 @@
 import { createContext, useContext, useState } from "react";
 
 interface Auth {
-	summonerName: string;
+	riotId: string;
 	isLoggedIn: boolean;
-	updateSummonerName: (newName: string) => void;
+	updateRiotId: (riotId: string) => void;
 	logOut: () => void;
 }
 
 const AuthContext = createContext<Auth>(undefined);
 
 export default function AuthContextProvider({ children }) {
-	const loadSummonerName = () => {
+	const loadRiotId = () => {
 		if (typeof window === "undefined") return;
-		return localStorage.getItem("summonerName");
+		return localStorage.getItem("riotId");
 	};
-	const [summonerName, setSummonerName] = useState(loadSummonerName);
+	const [riotId, setRiotId] = useState(loadRiotId);
 
-	const updateSummonerName = (newName: string) => {
-		localStorage.setItem("summonerName", newName);
-		setSummonerName(newName);
+	const updateRiotId = (newRiotId: string) => {
+		localStorage.setItem("riotId", newRiotId);
+		setRiotId(newRiotId);
 	};
 
 	const logOut = () => {
-		localStorage.removeItem("summonerName");
-		setSummonerName(null);
+		localStorage.removeItem("riotId");
+		setRiotId(null);
 	};
 
 	return (
-		<AuthContext.Provider
-			value={{ summonerName, isLoggedIn: !!summonerName, updateSummonerName, logOut }}
-		>
+		<AuthContext.Provider value={{ riotId, isLoggedIn: !!riotId, updateRiotId, logOut }}>
 			{children}
 		</AuthContext.Provider>
 	);
